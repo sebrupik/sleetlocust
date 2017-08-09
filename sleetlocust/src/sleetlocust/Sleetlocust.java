@@ -1,23 +1,21 @@
-/*
- * SNMP agent which receives (intercepts), encapsulates and forwards SNMP GET messages
- * and forwards them to our SNMP cache server.
- * The response will be sent back to the agent and source address spoofed.
- */
 package sleetlocust;
 
 import sleetlocust.objects.ShutdownThread;
 import sleetlocust.objects.SNMPPacket;
-import sleetlocust.objects.UDPSocketEngine;
-import sleetlocust.objects.UDPSocketThread;
+import sleetlocust.objects.SocketEngine;
 
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * SNMP agent which receives (intercepts), encapsulates and forwards SNMP GET messages
+ * and forwards them to our SNMP cache server.
+ * The response will be sent back to the agent and source address spoofed.
+ */
 public class Sleetlocust {
-    
     private final String _CLASS;
-    private UDPSocketEngine _udple;
+    private final SocketEngine _udple, _sslle;
     
     private int listenPortProxy = 30000;
     private InetAddress cacheServer;
@@ -29,15 +27,20 @@ public class Sleetlocust {
         
         Runtime.getRuntime().addShutdownHook(new ShutdownThread(this));
         
-        this._udple = new UDPSocketEngine(this);
-        listening = true;
+        this._udple = new SocketEngine(this, SocketEngine.UDP);
+        this._sslle = new SocketEngine(this, SocketEngine.SSL);
         
-        try {
+        this._udple.execute();
+        this._sslle.execute();
+        
+        //listening = true;
+        
+        /*try {
             cacheServer = InetAddress.getByName("192.168.0.1");
         } catch(java.net.UnknownHostException uhe) { }
         
         Socket incomingSock;
-        try (ServerSocket serverSocketProxy = new ServerSocket(listenPortProxy) ) {   
+        try (ServerSocket serverSocketProxy = new ServerSocket(listenPortProxy) ) {
             while(listening) {
                 System.out.println("listening loop...");
                 incomingSock = serverSocketProxy.accept();
@@ -48,7 +51,7 @@ public class Sleetlocust {
                     _udple.execute(new UDPSocketThread(this, incomingSock));
                 }
             }   
-        } catch (java.io.IOException ioe) { System.out.println(_CLASS+"/init - "+ioe); }
+        } catch (java.io.IOException ioe) { System.out.println(_CLASS+"/init - "+ioe); } */
     }
     
     

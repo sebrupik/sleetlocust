@@ -12,7 +12,7 @@ import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
 
-public class SSLSocketThread {
+public class SSLSocketThread  implements Runnable {
     private final String _CLASS;
     Sleetlocust owner;
     InetAddress dstAddr;
@@ -51,5 +51,12 @@ public class SSLSocketThread {
         } 
         
         return false;
+    }
+    
+    @Override
+    public void run() {
+        while(true) {
+            
+        }
     }
 }

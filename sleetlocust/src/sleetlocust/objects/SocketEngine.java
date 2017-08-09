@@ -14,25 +14,34 @@ import java.net.UnknownHostException;
  *
  * @author snr
  */
-public class UDPSocketEngine extends ThreadEngine {
+public class SocketEngine extends ThreadEngine {
     private final String _CLASS;
+    public static final int UDP = 1;
+    public static final int SSL = 2;
     
     Sleetlocust owner;
     
+    int socketType;
     UDPSocketThread udplt;
     
-    public UDPSocketEngine(Sleetlocust owner) {
+    public SocketEngine(Sleetlocust owner, int socketType) {
         super(1,1,10);
         
         this._CLASS = this.getClass().getName();
         this.owner = owner;
+        this.socketType = socketType;
         
         /*try {
             this.udplt = new UDPListenerThread(owner, InetAddress.getLocalHost(), 30000);
         } catch(UnknownHostException uhe) { }*/
     }
     
-    public void execute(UDPSocketThread udplt) {
-        executorPool.execute(udplt);
+    public void execute() {
+        try {
+        if(socketType == SocketEngine.UDP)
+            executorPool.execute(new UDPSocketThread(owner, InetAddress.getLocalHost(), 30000));
+        else if(socketType == SocketEngine.SSL)
+            executorPool.execute(new SSLSocketThread(owner, InetAddress.getLocalHost(), 444));
+        } catch (UnknownHostException uhe) { System.out.println(_CLASS+"/execute - "+uhe); }
     }
 }
