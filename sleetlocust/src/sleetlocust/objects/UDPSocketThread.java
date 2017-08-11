@@ -6,6 +6,8 @@ import java.net.DatagramPacket;
 import java.net.ServerSocket;
 import java.net.InetAddress;
 import java.net.Socket;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  *
@@ -19,34 +21,47 @@ public class UDPSocketThread implements Runnable {
     private DatagramPacket inboundPacket;
     private byte[] inboundData;
     private SNMPPacket snmpPacket;
-    private int port;
+    //private int port;
     
-    public UDPSocketThread(Sleetlocust owner, InetAddress listenAddr, int port) {
+    private InetAddress vsauceIP;
+    private int vsaucePort;
+    
+    Socket incomingSocket;
+    
+    public UDPSocketThread(Sleetlocust owner, Socket incomingSocket, InetAddress vsauceIP, int vsaucePort) {
         this._CLASS = this.getClass().getName();
         this.owner = owner;
+        this.incomingSocket = incomingSocket;
+        this.vsauceIP = vsauceIP;
+        this.vsaucePort = vsaucePort;
     }
     
     @Override
     public void run() {
-        Socket incomingSocket;
-        
-        while(true) {
-            System.out.println(_CLASS+"/run - listening...");
-            try ( ServerSocket serverSocket = new ServerSocket(port) ) {
-                incomingSocket = serverSocket.accept();
-                System.out.println(_CLASS+"/run - got a connection. Processing...");
-                
-                inboundData = new byte[65000];
-                inboundPacket = new DatagramPacket(inboundData, 65000);
+        System.out.println(_CLASS+"/run - got a UDP connection. Processing...");
 
-                snmpPacket = new SNMPPacket(inboundPacket.getAddress(), inboundPacket.getPort(), incomingSocket.getLocalAddress(), incomingSocket.getLocalPort());
-                snmpPacket.setData(inboundPacket.getData(), inboundPacket.getLength());
+        inboundData = new byte[65000];
+        inboundPacket = new DatagramPacket(inboundData, 65000);
 
-                owner.sendToCore(snmpPacket);
-                
-            } catch(java.io.IOException ioe) { System.out.println(_CLASS+" "+ioe.toString());
-            }
-        }
+        snmpPacket = new SNMPPacket(inboundPacket.getAddress(), inboundPacket.getPort(), incomingSocket.getLocalAddress(), incomingSocket.getLocalPort());
+        snmpPacket.setData(inboundPacket.getData(), inboundPacket.getLength());
+
         
+        
+        SSLSocketFactory sslFact = (SSLSocketFactory)SSLSocketFactory.getDefault();
+        try {
+            SSLSocket sslsock = (SSLSocket)sslFact.createSocket(vsauceIP, vsaucePort);
+            sslsock.setUseClientMode(true);
+            sslsock.setEnabledCipherSuites(new String[]{"TLS_ECDH_RSA_WITH_AES_128_CBC_SHA"});
+            sslsock.setSoTimeout(20);
+            System.out.println("about to handshake");
+            sslsock.startHandshake();
+            System.out.println("handshake complete");
+            
+            System.out.print(_CLASS+"/run - "+sslsock.toString());
+            
+        } catch(java.io.IOException ioe) { System.out.println(_CLASS+"/run - "+ioe); }
+        
+      
     }
 }
