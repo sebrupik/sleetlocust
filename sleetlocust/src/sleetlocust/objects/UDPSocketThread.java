@@ -16,6 +16,7 @@ import javax.net.ssl.SSLSocketFactory;
 public class UDPSocketThread implements Runnable {
     private final String _CLASS;
     Sleetlocust owner;
+    private String[] enabled_cipher_suites;
     
     private InetAddress listenAddr;
     private DatagramPacket inboundPacket;
@@ -28,12 +29,13 @@ public class UDPSocketThread implements Runnable {
     
     Socket incomingSocket;
     
-    public UDPSocketThread(Sleetlocust owner, Socket incomingSocket, InetAddress vsauceIP, int vsaucePort) {
+    public UDPSocketThread(Sleetlocust owner, Socket incomingSocket, InetAddress vsauceIP, int vsaucePort, String[] enabled_cipher_suites) {
         this._CLASS = this.getClass().getName();
         this.owner = owner;
         this.incomingSocket = incomingSocket;
         this.vsauceIP = vsauceIP;
         this.vsaucePort = vsaucePort;
+        this.enabled_cipher_suites = enabled_cipher_suites;
     }
     
     @Override
@@ -52,15 +54,15 @@ public class UDPSocketThread implements Runnable {
         try {
             SSLSocket sslsock = (SSLSocket)sslFact.createSocket(vsauceIP, vsaucePort);
             sslsock.setUseClientMode(true);
-            sslsock.setEnabledCipherSuites(new String[]{"TLS_ECDH_RSA_WITH_AES_128_CBC_SHA"});
-            sslsock.setSoTimeout(20);
+            //sslsock.setEnabledCipherSuites(enabled_cipher_suites);
+            //sslsock.setSoTimeout(20);
             System.out.println("about to handshake");
             sslsock.startHandshake();
             System.out.println("handshake complete");
             
             System.out.print(_CLASS+"/run - "+sslsock.toString());
             
-        } catch(java.io.IOException ioe) { System.out.println(_CLASS+"/run - "+ioe); }
+        } catch(java.io.IOException ioe) { System.out.println(_CLASS+"/run - "+ioe);  ioe.printStackTrace(); }
         
       
     }

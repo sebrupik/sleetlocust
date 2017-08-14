@@ -41,13 +41,24 @@ public class SSLServerSocketThread  implements Runnable {
         
         System.out.println("Look at this incoming SSL socket : "+incomingSocket.toString());
         
+        String[] a = incomingSocket.getEnabledCipherSuites();
+        for (String a1 : a) {
+            System.out.println(a1);
+        }
+        
         try {
+            System.out.println("1");
             BufferedWriter w = new BufferedWriter(new OutputStreamWriter(incomingSocket.getOutputStream()));
+            System.out.println("2");
             String s = "hello there!";
             
+            
             w.write(s,0,s.length());
+            System.out.println("3");
             w.newLine();
+            System.out.println("4");
             w.flush();
+            System.out.println("finished writing...");
             
         } catch(java.io.IOException ioe) { System.out.println(ioe); }
         
