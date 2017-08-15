@@ -16,6 +16,7 @@ import javax.net.ssl.SSLSocket;
 
 import java.security.KeyStore;
 import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.KeyManager;
 
 /**
  *
@@ -30,25 +31,29 @@ public class SocketEngine extends ThreadEngine {
     
     private InetAddress vsauceIP;
     private int vsaucePort;
+    private String keystoreName;
+    private KeyManager[] kms;
     
     Sleetlocust owner;
     
     int socketType;
     UDPSocketThread udplt;
     
-    public SocketEngine(int socketType, int listeningPort) {
+    public SocketEngine(int socketType, int listeningPort, KeyManager[] kms) {
         super(1,1,10);
         
         this._CLASS = this.getClass().getName();
         this.socketType = socketType;
         this.listeningPort = listeningPort;
+        this.kms = kms;
     }
     
     public SocketEngine(int socketType, int listeningPort, InetAddress vsauceIP, int vsaucePort) {
-        this(socketType, listeningPort);
+        this(socketType, listeningPort, null);
         
         this.vsauceIP = vsauceIP;
         this.vsaucePort = vsaucePort;
+        this.keystoreName = keystoreName;
     }
     
     public void execute() {
@@ -61,7 +66,7 @@ public class SocketEngine extends ThreadEngine {
                 } catch(java.io.IOException ioe) { System.out.println(_CLASS+" "+ioe.toString());
                 }
             } else if(socketType == SocketEngine.SSL) {
-                SSLServerSocketFactory sslFact = genSSLFactory("TLS");
+                SSLServerSocketFactory sslFact = genSSLFactory("TLS", kms);
                 
                 try ( SSLServerSocket serverSocket = (SSLServerSocket)sslFact.createServerSocket(listeningPort) ) {
                     serverSocket.setNeedClientAuth(false);
@@ -79,12 +84,12 @@ public class SocketEngine extends ThreadEngine {
     }
     
     
-    private SSLServerSocketFactory genSSLFactory(String provider) {
+    private SSLServerSocketFactory genSSLFactory(String provider, KeyManager[] kms) {
         SSLServerSocketFactory sslFact = null;
         
         try {
             SSLContext sslContext = SSLContext.getInstance(provider);
-            sslContext.init(genKMFactory("JKS", "blah.jks").getKeyManagers(), null, null);
+            sslContext.init(kms, null, null);
             sslFact = sslContext.getServerSocketFactory();
         } catch(java.security.NoSuchAlgorithmException | java.security.KeyManagementException nsae) { System.out.println(_CLASS+"/genSSLFactory - "+nsae); 
         } catch( java.lang.Exception e ) { System.out.println(_CLASS+"/genSSLFactory - "+e); 
@@ -98,7 +103,7 @@ public class SocketEngine extends ThreadEngine {
         return sslFact;
     }
      
-    private KeyManagerFactory genKMFactory(String ksType, String ksName) throws java.lang.Exception {
+    /*private KeyManagerFactory genKMFactory(String ksType, String ksName) throws java.lang.Exception {
         KeyStore ks = KeyStore.getInstance(ksType);
         
         ks.load(new java.io.FileInputStream(ksName), "SebJKS".toCharArray());
@@ -106,5 +111,5 @@ public class SocketEngine extends ThreadEngine {
         kmf.init(ks, "keypassword".toCharArray());
         
         return kmf;
-    }
+    }*/
 }
