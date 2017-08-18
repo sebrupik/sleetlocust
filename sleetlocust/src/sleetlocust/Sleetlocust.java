@@ -12,6 +12,9 @@ import java.net.InetAddress;
  * SNMP agent which receives (intercepts), encapsulates and forwards SNMP GET messages
  * and forwards them to our SNMP cache server.
  * The response will be sent back to the agent and source address spoofed.
+ * 
+ *  iptables -t nat -A OUTPUT -p udp --dport 161 -j REDIRECT --to-ports 30000
+ * 
  */
 public class Sleetlocust {
     private final String _CLASS;

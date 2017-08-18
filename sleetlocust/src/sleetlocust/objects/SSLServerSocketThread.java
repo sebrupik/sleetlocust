@@ -4,6 +4,8 @@ package sleetlocust.objects;
 import sleetlocust.Sleetlocust;
 
 import java.io.BufferedWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 
 //import java.io.IOException;
@@ -26,40 +28,34 @@ public class SSLServerSocketThread  implements Runnable {
     private final String _CLASS;
     Sleetlocust owner;
     
-    private final SSLSocket incomingSocket;
+    private final SSLSocket sslsock;
     
-    public SSLServerSocketThread(Sleetlocust owner, SSLSocket incomingSocket) {
+    public SSLServerSocketThread(Sleetlocust owner, SSLSocket sslsock) {
         this._CLASS = this.getClass().getName();
         this.owner = owner;
         
-        this.incomingSocket = incomingSocket;
+        this.sslsock = sslsock;
     }
     
     @Override
     public void run() {
         System.out.println(_CLASS+"/run - got a SSL connection. Processing...");
+        System.out.println("Look at this incoming SSL socket : "+sslsock.toString());
         
-        System.out.println("Look at this incoming SSL socket : "+incomingSocket.toString());
-        
-        String[] a = incomingSocket.getEnabledCipherSuites();
+        /*String[] a = sslsock.getEnabledCipherSuites();
         for (String a1 : a) {
             System.out.println(a1);
-        }
+        }*/
         
         try {
-            System.out.println("1");
-            BufferedWriter w = new BufferedWriter(new OutputStreamWriter(incomingSocket.getOutputStream()));
-            System.out.println("2");
-            String s = "hello there!";
+            ObjectOutputStream outgoingStream = new ObjectOutputStream(sslsock.getOutputStream());
+            ObjectInputStream incomingStream = new ObjectInputStream(sslsock.getInputStream());
             
+            SNMPPacket sp = (SNMPPacket)incomingStream.readObject();
             
-            w.write(s,0,s.length());
-            System.out.println("3");
-            w.newLine();
-            System.out.println("4");
-            w.flush();
-            System.out.println("finished writing...");
+            System.out.println(sp.toString());
             
+        } catch (java.lang.ClassNotFoundException cnfe) { System.out.println(cnfe);
         } catch(java.io.IOException ioe) { System.out.println(ioe); }
         
     }

@@ -5,10 +5,12 @@
  */
 package sleetlocust.objects;
 
+import java.net.DatagramSocket;
 import sleetlocust.Sleetlocust;
 
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.DatagramPacket;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLContext;
@@ -60,8 +62,15 @@ public class SocketEngine extends ThreadEngine {
         while(true) {
             System.out.println(_CLASS+"/run - listening...");
             if(socketType == SocketEngine.UDP) {
-                try ( ServerSocket serverSocket = new ServerSocket(listeningPort) ) {
-                    executorPool.execute(new UDPSocketThread(owner, serverSocket.accept(), vsauceIP, vsaucePort, _ENABLED_CIPHER_SUITES));
+                //try ( ServerSocket serverSocket = new ServerSocket(listeningPort) ) {
+                //    executorPool.execute(new UDPSocketThread(owner, serverSocket.accept(), vsauceIP, vsaucePort, _ENABLED_CIPHER_SUITES));
+                try (DatagramSocket serverSocket = new DatagramSocket(listeningPort)) {
+                    
+                    DatagramPacket inboundPacket = new DatagramPacket(new byte[65000], 65000);
+                    serverSocket.receive(inboundPacket);
+                    System.out.println("what is the local socket address ? : "+serverSocket.getLocalSocketAddress());
+                    
+                    executorPool.execute(new UDPSocketThread(owner, inboundPacket, serverSocket, vsauceIP, vsaucePort, _ENABLED_CIPHER_SUITES));
 
                 } catch(java.io.IOException ioe) { System.out.println(_CLASS+" "+ioe.toString());
                 }
