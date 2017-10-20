@@ -54,6 +54,7 @@ public class SSLServerSocketThread  implements Runnable {
             SNMPPacket sp = (SNMPPacket)incomingStream.readObject();
             
             System.out.println(sp.toString());
+            sp.printMe();
             
         } catch (java.lang.ClassNotFoundException cnfe) { System.out.println(cnfe);
         } catch(java.io.IOException ioe) { System.out.println(ioe); }
